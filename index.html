@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>网络小说理解练习</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f0f8ff; margin: 0; padding: 20px; }
+        .container { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.2); max-width: 800px; margin: auto; }
+        .question { display: none; }
+        .question.active { display: block; }
+        button { background-color: #4682b4; color: white; border: none; padding: 10px 20px; margin: 10px 5px; border-radius: 6px; cursor: pointer; }
+        button:hover { background-color: #5a9bd4; }
+        #summary { display: none; background-color: #e6f7ff; border-left: 6px solid #2196F3; padding: 10px 20px; }
+        .explanation { margin-top: 10px; padding: 10px; background: #f9f9f9; border-left: 4px solid #ccc; }
+        textarea { width: 100%; min-height: 80px; margin-top: 10px; padding: 8px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="quiz"></div>
+    <div>
+        <button onclick="prevQuestion()">上一题</button>
+        <button onclick="nextQuestion()">下一题</button>
+        <button onclick="restartQuiz()">重新开始</button>
+    </div>
+    <div id="summary"></div>
+</div>
+<script>
+const questions = [
+    {
+        q: "1. 以下哪一项不是网络文学的三种定义之一？",
+        type: "mc",
+        options: ["从网络传播方式出发", "从创作和接受的交互性出发", "从文学奖项的评选标准出发", "从创作思维是否依托网络角度出发"],
+        answer: 2,
+        explanation: "网络文学的三种主流定义为：其一是从内容角度认为应与网络相关；其二是从思维方式来看应基于网络思维；其三是从传播途径上应首发或主要通过网络传播。而“文学奖项的评选标准”属于外部评价体系，与网络文学的定义无关，因此不是定义的一部分。"
+    },
+    {
+        q: "2. 哪类小说最可能包含“打破语法规则”、“表情符号”和“流行语”？",
+        type: "mc",
+        options: ["古典小说", "穿越小说", "现实主义小说", "政治小说"],
+        answer: 1,
+        explanation: "穿越小说最大的特色之一就是语言的“混搭”与“反差”，常出现古今语言交错、现代流行语和表情符号的植入，形成戏谑、幽默甚至荒诞的效果。它借助网络时代的语言风格，让读者感受到既熟悉又新奇的阅读体验，这在古典或现实主义小说中是不常见的。"
+    },
+    {
+        q: "3. 关于“盗墓小说”的语言特点，哪项说法是错误的？",
+        type: "mc",
+        options: ["使用大量专业术语并创造新词", "通常采用严肃、规范的书面语", "出现地方口音的对白", "混合历史、神话与虚构情节"],
+        answer: 1,
+        explanation: "盗墓小说在语言风格上更接近大众化、通俗化，经常融入方言、黑话、笑料等，增强代入感与真实感。因此，它并不会采用“严肃、规范的书面语”，而是更接近口语表达和现实交流方式。B选项明显与盗墓小说的语言特征相悖。"
+    },
+    {
+        q: "4. 关于网络小说出海的翻译策略，正确的是哪项？",
+        type: "mc",
+        options: ["所有翻译都由AI自动完成", "无需考虑文化背景", "本土化策略对海外传播重要", "只需翻成英语即可成功"],
+        answer: 2,
+        explanation: "网络小说走向海外市场时，最关键的挑战之一是文化差异，因此“本土化策略”显得尤为重要。这不仅包括语言的翻译，还涉及文化元素的适配，如人名、习俗、叙事节奏等，以确保目标国读者能理解并接受文本内容。因此C选项最符合事实。"
+    },
+    {
+        q: "5. 简述“穿越小说”中常见的语言融合现象，并举一个你想象中的例子。",
+        type: "short",
+        explanation: "穿越小说中常见将现代流行文化融入古代语境，如网络语言、外来词汇、歌词甚至表情符号等。这种语言混搭风格突破了传统叙事界限，提升了娱乐性和可读性。例如：“皇上，今天你又在内卷吗？”这样的表达便将现代流行语“内卷”用于古代情景。"
+    },
+    {
+        q: "6. 请说明为什么“盗墓小说”能吸引大量读者？",
+        type: "short",
+        explanation: "盗墓小说通过悬疑与冒险情节设置，加之使用大量行业术语（如“洛阳铲”、“黑驴蹄子”等）、带有地域色彩的口语、以及第一人称视角，使读者产生身临其境之感。这种写作方式不仅增加了故事的真实感，还营造出既恐怖又吸引人的氛围。"
+    },
+    {
+        q: "7. 你如何看待AI翻译在网络小说出海中的作用？请结合优势与局限。",
+        type: "short",
+        explanation: "AI翻译在网络小说出海中的优势是速度快、成本低、覆盖面广，能快速实现多语种传播。然而，它也容易出现术语前后不一致、人物称谓混乱、文化语境误读等问题。人机协同翻译可以结合AI的效率与人工的精准判断，实现更高质量、文化适配性更强的译本，是未来发展的重要方向。"
+    }
+];
+
+let currentQuestion = 0;
+let answers = [];
+
+function renderQuestion() {
+    const quiz = document.getElementById('quiz');
+    quiz.innerHTML = '';
+    const q = questions[currentQuestion];
+    const div = document.createElement('div');
+    div.className = 'question active';
+    div.innerHTML = `<p><strong>${q.q}</strong></p>`;
+    if (q.type === 'mc') {
+        q.options.forEach((opt, index) => {
+            div.innerHTML += `<p><input type="radio" name="q${currentQuestion}" value="${index}"> ${opt}</p>`;
+        });
+    } else {
+        div.innerHTML += `<textarea id="short${currentQuestion}" placeholder="在此输入你的答案..."></textarea>`;
+    }
+    quiz.appendChild(div);
+}
+
+function nextQuestion() {
+    saveAnswer();
+    if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+    } else {
+        showSummary();
+    }
+}
+
+function prevQuestion() {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+    }
+}
+
+function restartQuiz() {
+    currentQuestion = 0;
+    answers = [];
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('quiz').style.display = 'block';
+    renderQuestion();
+}
+
+function saveAnswer() {
+    const q = questions[currentQuestion];
+    if (q.type === 'mc') {
+        const radios = document.getElementsByName(`q${currentQuestion}`);
+        radios.forEach((r) => {
+            if (r.checked) answers[currentQuestion] = parseInt(r.value);
+        });
+    } else {
+        const textarea = document.getElementById(`short${currentQuestion}`);
+        if (textarea) answers[currentQuestion] = textarea.value;
+    }
+}
+
+function showSummary() {
+    saveAnswer();
+    const summary = document.getElementById('summary');
+    summary.innerHTML = '<h2>总结</h2>';
+    questions.forEach((q, i) => {
+        summary.innerHTML += `<div>
+            <p><strong>${q.q}</strong></p>`;
+        if (q.type === 'mc') {
+            const userAns = answers[i];
+            const correct = q.answer;
+            summary.innerHTML += `<p>你的回答：${q.options[userAns] || '未作答'}<br>正确答案：${q.options[correct]}</p>`;
+        } else {
+            summary.innerHTML += `<p>你的回答：${answers[i] || '未作答'}</p>`;
+        }
+        summary.innerHTML += `<div class="explanation">${q.explanation}</div></div><hr>`;
+    });
+    summary.style.display = 'block';
+    document.getElementById('quiz').style.display = 'none';
+}
+
+window.onload = renderQuestion;
+</script>
+</body>
+</html>
